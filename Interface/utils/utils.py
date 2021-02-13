@@ -13,7 +13,7 @@ def uuid_32_upper():
 def is_login(func):
     @functools.wraps(func)
     def inner(*args, **kwargs):
-        session_id = request.cookies.get("SESSIONID")
+        session_id = request.cookies.get("BLUE_FEATHER_SESSION")
         if not session_id:
             return return_json(UserNoLoginFail)
         user = session.get(session_id)

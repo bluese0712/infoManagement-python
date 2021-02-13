@@ -1,8 +1,7 @@
 import hashlib
 from . import user_api
-from Interface.utils.utils import is_login
-from flask import request
-from Interface.utils.return_status import Success, Fail, return_json
+from flask import request, session
+from Interface.utils import is_login, Success, Fail, return_json, form_has_parameter as validate
 from Interface.models import User
 
 
@@ -10,12 +9,14 @@ from Interface.models import User
 @user_api.route('/getUserListByParams', methods=['POST'])
 @is_login
 def get_user_by_params():
-    page_size = int(request.form.get('pageSize', 20))
-    page_number = int(request.form.get('pageNumber', 1))
-    param = [User.forbidStatus == 0]
-    if request.form.get('username'):
-        param.append(User.username.like("%"+request.form.get('username')+"%"))
-    users = User.to_paginate_dict(User.query.filter(*param).order_by(User.userID), page_number, page_size)
+    param = [User.deleteStatus == 0]
+    if request.form.get('userName'):
+        param.append(User.userName.like("%"+request.form.get('userName')+"%"))
+    if request.form.get('nickName'):
+        param.append(User.nickName.like("%"+request.form.get('nickName')+"%"))
+    users = User.to_paginate_dict(User.query.filter(*param), int(request.form.get('pageNumber', 1)),
+                                  int(request.form.get('pageSize', 20)))
+    print(session.get(request.cookies.get("BLUE_FEATHER_SESSION")))
     return return_json(Success(data=users))
 
 
@@ -23,12 +24,16 @@ def get_user_by_params():
 @user_api.route('/createUser', methods=['POST'])
 @is_login
 def create_user():
-    if not request.form.get('username'):
-        return return_json(Fail(msg='角色名为空'))
-    elif not request.form.get('password'):
-        return return_json(Fail(msg='密码为空'))
-    user = User(username=request.form.get('username'),
-                password=hashlib.md5(bytes(request.form.get('password'), encoding="utf8")).hexdigest().upper())
+    required = validate(request.form, [{'userName': '用户名为空'}, {'nickName': '昵称为空'}, {'password': '密码为空'}])
+    if required:
+        return return_json(Fail(msg=required))
+
+    user_list = User.query.filter(User.userName == request.form.get('userName')).all()
+    if len(user_list) != 0:
+        return return_json(Fail(msg='用户名重复'))
+    user = User(userName=request.form.get('userName'), nickName=request.form.get('nickName'),
+                password=hashlib.md5(bytes(request.form.get('password'), encoding="utf8")).hexdigest().upper(),
+                creatorID=session.get(request.cookies.get("BLUE_FEATHER_SESSION")).get('userID'))
     return return_json(Success(msg='添加成功') if User.to_add(user) else Fail(msg='添加失败'))
 
 

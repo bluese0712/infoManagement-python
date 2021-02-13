@@ -26,7 +26,7 @@ class CurrentAPIMixin(object):
     @staticmethod
     def to_delete(model_data):
         try:
-            model_data.forbidStatus = 1
+            model_data.deleteStatus = 1
             db.session.commit()
         except Exception as e:
             db.session.rollback()
@@ -63,7 +63,7 @@ class CurrentAPIMixin(object):
     def to_delete_list(model_data):
         try:
             for item in model_data:
-                item.forbidStatus = 1
+                item.deleteStatus = 1
             db.session.commit()
         except Exception as e:
             db.session.rollback()

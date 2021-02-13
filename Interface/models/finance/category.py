@@ -11,10 +11,10 @@ class CWCategory(CurrentAPIMixin, db.Model):
     # 所属类别
     parentID = db.Column(db.Integer, db.ForeignKey('cw_m_category.categoryID'))
     parent = db.relationship('CWCategory', remote_side=[categoryID])
-    # 类型 0为支出 1为收入 2为具体项
-    type = db.Column(db.Integer)
+    # 类型 0为储蓄 1为收入 2为支出
+    type = db.Column(db.Integer, default=1)
     # 是否删除
-    deleteStatus = db.Column(db.Boolean)
+    deleteStatus = db.Column(db.Boolean, default=0)
 
     def __repr__(self):
         return '<Department {}>'.format(self.categoryName)
